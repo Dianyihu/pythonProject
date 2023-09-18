@@ -31,8 +31,8 @@ H = np.array([[1,0]])
 
 x0 = np.array([[15,0]]).T
 p0 = np.array([[10,0],[0,100]])
-Q = np.array([[10,0],[0,10]])
-R = np.array([[100]])
+Q = np.array([[1e-2,0],[0,1e-2]])
+R = np.array([[50]])
 
 # kf = Kalman_filter(A, Q, H, R, x0, p0)
 # kf.filter(z_list=ts)
