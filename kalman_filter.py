@@ -33,17 +33,25 @@ R: measurement covariance, (nz, nz)
 K: Kalman gain, (nx, nz)
 '''
 
+def convert_dtype(x):
+    if isinstance(x, np.ndarray):
+        return x
+    elif isinstance(x, list):
+        return np.array(x)
+    elif isinstance(x, int) or isinstance(x, float):
+        return x*np.eye(1)
 
 class Kalman_filter:
     def __init__(self, A, Q, H, R, x0, p0, B=None):
-        self.A, self.Q, self.H, self.R = A, Q, H, R
-        self.B = np.eye(1) if B is None else B
-        self.xhat_init, self.phat_init = x0, p0
-        self.xhat_0, self.phat_0 = x0, p0
+        self.A, self.Q, self.H, self.R = convert_dtype(A), convert_dtype(Q), convert_dtype(H), convert_dtype(R)
+        self.B = np.eye(1) if B is None else convert_dtype(B)
+        self.xhat_init, self.phat_init = convert_dtype(x0), convert_dtype(p0)
+        self.xhat_0, self.phat_0 = self.xhat_init, self.phat_init
 
     def predict(self, xhat_0, phat_0, u_1=None):
-        if u_1 is None:
-            u_1 = np.eye(1)*0
+        xhat_0 = convert_dtype(xhat_0)
+        phat_0 = convert_dtype(phat_0)
+        u_1 = np.eye(1)*0 if u_1 is None else convert_dtype(u_1)
 
         try:
             xhat_10 = np.dot(self.A, xhat_0) + np.dot(self.B, u_1)
@@ -53,6 +61,10 @@ class Kalman_filter:
             return np.nan, np.nan
 
     def update(self, xhat_10, phat_10, z_1):
+        xhat_10 = convert_dtype(xhat_10)
+        phat_10 = convert_dtype(phat_10)
+        z_1 = convert_dtype(z_1)
+
         try:
             K = np.dot(np.dot(phat_10, self.H.T), np.linalg.pinv(np.dot(np.dot(self.H, phat_10), self.H.T) + self.R))
             xhat_1 = xhat_10 + np.dot(K, z_1 - np.dot(self.H, xhat_10))
@@ -69,9 +81,7 @@ class Kalman_filter:
             self.phat_0 = self.phat_init
             return np.nan, np.nan
         else:
-            xhat_10, phat_10 = self.predict(self.xhat_0, self.phat_0, s[u_names].to_numpy().reshape(-1,1))
-            xhat_1, phat_1 = self.update(xhat_10, phat_10, s[[z_name]].to_numpy().reshape(-1,1))
+            xhat_10, phat_10 = self.predict(self.xhat_0, self.phat_0, s[u_names].values.reshape(-1,1))
+            xhat_1, phat_1 = self.update(xhat_10, phat_10, s[z_name])
             self.xhat_0, self.phat_0 = xhat_1, phat_1
             return xhat_1, phat_1
-
-
