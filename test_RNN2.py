@@ -4,7 +4,7 @@
 Created by
 @author: Dianyi Hu
 @date: 2023/9/20 
-@time: 01:14
+@time: 02:12
 '''
 
 import pandas as pd
@@ -13,6 +13,17 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import torch
 from torch import nn
+
+sns.set_palette('husl')
+
+t = np.linspace(-1,1, 300)
+y1 = t[:100]*t[:100] + 0.1*np.random.random(100) + 2
+y2 = t[100:200]*t[100:200] + 0.1*np.random.random(100) + 1
+y3 = t[200:]*t[200:] + 0.1*np.random.random(100) + 5
+y = np.concatenate([y1,y2,y3])
+# plt.scatter(t, y)
+# plt.show()
+
 
 # Define LSTM Neural Networks
 class LstmRNN(nn.Module):
@@ -38,51 +49,26 @@ class LstmRNN(nn.Module):
         return x
 
 
+
 if __name__ == '__main__':
-    # create database
-    data_len = 200
-    t = np.linspace(0, 12*np.pi, data_len)
-    sin_t = np.sin(t)
-    cos_t = np.cos(t)
-
-    dataset = np.zeros((data_len, 2))
-    dataset[:,0] = sin_t
-    dataset[:,1] = cos_t
-    dataset = dataset.astype('float32')
-
-    # plot part of the original dataset
-    plt.figure()
-    plt.plot(t[0:60], dataset[0:60,0], label='sin(t)')
-    plt.plot(t[0:60], dataset[0:60,1], label = 'cos(t)')
-    plt.plot([2.5, 2.5], [-1.3, 0.55], 'r--', label='t = 2.5') # t = 2.5
-    plt.plot([6.8, 6.8], [-1.3, 0.85], 'm--', label='t = 6.8') # t = 6.8
-    plt.xlabel('t')
-    plt.ylim(-1.2, 1.2)
-    plt.ylabel('sin(t) and cos(t)')
-    plt.legend(loc='upper right')
-
     # choose dataset for training and testing
-    train_data_ratio = 0.5 # Choose 80% of the data for testing
-    train_data_len = int(data_len*train_data_ratio)
-    train_x = dataset[:train_data_len, 0]
-    train_y = dataset[:train_data_len, 1]
+    train_x = t[:150]
+    train_y = y[:150]
     INPUT_FEATURES_NUM = 1
     OUTPUT_FEATURES_NUM = 1
-    t_for_training = t[:train_data_len]
 
     # test_x = train_x
     # test_y = train_y
-    test_x = dataset[train_data_len:, 0]
-    test_y = dataset[train_data_len:, 1]
-    t_for_testing = t[train_data_len:]
+    test_x = t[100:]
+    test_y = y[100:]
 
     # ----------------- train -------------------
     train_x_tensor = train_x.reshape(-1, 5, INPUT_FEATURES_NUM) # set batch size to 5
     train_y_tensor = train_y.reshape(-1, 5, OUTPUT_FEATURES_NUM) # set batch size to 5
 
     # transfer data to pytorch tensor
-    train_x_tensor = torch.from_numpy(train_x_tensor)
-    train_y_tensor = torch.from_numpy(train_y_tensor)
+    train_x_tensor = torch.from_numpy(train_x_tensor).to(torch.float32)
+    train_y_tensor = torch.from_numpy(train_y_tensor).to(torch.float32)
     # test_x_tensor = torch.from_numpy(test_x)
 
     lstm_model = LstmRNN(INPUT_FEATURES_NUM, 16, output_size=OUTPUT_FEATURES_NUM, num_layers=1) # 16 hidden units
@@ -120,29 +106,17 @@ if __name__ == '__main__':
 
     # prediction on test dataset
     test_x_tensor = test_x.reshape(-1, 5, INPUT_FEATURES_NUM) # set batch size to 5, the same value with the training set
-    test_x_tensor = torch.from_numpy(test_x_tensor)
+    test_x_tensor = torch.from_numpy(test_x_tensor).to(torch.float32)
 
     predictive_y_for_testing = lstm_model(test_x_tensor)
     predictive_y_for_testing = predictive_y_for_testing.view(-1, OUTPUT_FEATURES_NUM).data.numpy()
 
     # ----------------- plot -------------------
     plt.figure()
-    plt.plot(t_for_training, train_x, 'g', label='sin_trn')
-    plt.plot(t_for_training, train_y, 'b', label='ref_cos_trn')
-    plt.plot(t_for_training, predictive_y_for_training, 'y--', label='pre_cos_trn')
+    plt.scatter(train_x, train_y)
+    plt.plot(train_x, predictive_y_for_training)
 
-    plt.plot(t_for_testing, test_x, 'c', label='sin_tst')
-    plt.plot(t_for_testing, test_y, 'k', label='ref_cos_tst')
-    plt.plot(t_for_testing, predictive_y_for_testing, 'm--', label='pre_cos_tst')
-
-    plt.plot([t[train_data_len], t[train_data_len]], [-1.2, 4.0], 'r--', label='separation line') # separation line
-
-    plt.xlabel('t')
-    plt.ylabel('sin(t) and cos(t)')
-    plt.xlim(t[0], t[-1])
-    plt.ylim(-1.2, 4)
-    plt.legend(loc='upper right')
-    plt.text(14, 2, "train", size = 15, alpha = 1.0)
-    plt.text(20, 2, "test", size = 15, alpha = 1.0)
+    plt.scatter(test_x, test_y, c='C1')
+    plt.plot(test_x, predictive_y_for_testing, c='C2')
 
     plt.show()
