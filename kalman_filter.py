@@ -33,13 +33,15 @@ R: measurement covariance, (nz, nz)
 K: Kalman gain, (nx, nz)
 '''
 
+
 def convert_dtype(x):
     if isinstance(x, np.ndarray):
         return x
     elif isinstance(x, list):
         return np.array(x)
     elif isinstance(x, int) or isinstance(x, float):
-        return x*np.eye(1)
+        return x * np.eye(1)
+
 
 class Kalman_filter:
     def __init__(self, A, Q, H, R, x0, p0, B=None):
@@ -51,7 +53,7 @@ class Kalman_filter:
     def predict(self, xhat_0, phat_0, u_1=None):
         xhat_0 = convert_dtype(xhat_0)
         phat_0 = convert_dtype(phat_0)
-        u_1 = np.eye(1)*0 if u_1 is None else convert_dtype(u_1)
+        u_1 = np.eye(1) * 0 if u_1 is None else convert_dtype(u_1)
 
         try:
             xhat_10 = np.dot(self.A, xhat_0) + np.dot(self.B, u_1)
@@ -75,13 +77,13 @@ class Kalman_filter:
         except:
             return np.nan, np.nan
 
-    def filter_row(self, s,  u_names, z_name):
-        if s[u_names+[z_name]].isna().any():
-            self.xhat_0 = s[z_name]*np.eye(1)
+    def filter_row(self, s, u_names, z_name):
+        if s[u_names + [z_name]].isna().any():
+            self.xhat_0 = s[z_name] * np.eye(1)
             self.phat_0 = self.phat_init
             return np.nan, np.nan
         else:
-            xhat_10, phat_10 = self.predict(self.xhat_0, self.phat_0, s[u_names].values.reshape(-1,1))
+            xhat_10, phat_10 = self.predict(self.xhat_0, self.phat_0, s[u_names].values.reshape(-1, 1))
             xhat_1, phat_1 = self.update(xhat_10, phat_10, s[z_name])
             self.xhat_0, self.phat_0 = xhat_1, phat_1
             return xhat_1, phat_1
