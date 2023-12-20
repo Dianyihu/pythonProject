@@ -35,12 +35,7 @@ def update(frame):
     return line,
 
 # 调用 FuncAnimation
-ani = FuncAnimation(fig
-                   ,update
-                   ,init_func=init
-                   ,frames=200
-                   ,interval=2
-                   ,blit=True
-                   )
+ani = FuncAnimation(fig,update,init_func=init,frames=200,interval=2
+                   ,blit=True)
 
 ani.save("animation.gif", fps=25, writer="pillow")
