@@ -15,7 +15,6 @@ from matplotlib import cm
 
 cmap = cm.coolwarm
 
-
 # ***************************************************
 
 esfqr = pd.Series(35+10*np.random.rand(72), index=np.arange(0,360,5))
@@ -77,7 +76,6 @@ def centering_data(data, mode):
                     df_reverse.loc[i] = data.loc[i] - data.loc[540-i]
 
             return abs(df_reverse[(df_reverse.index<90)|(df_reverse.index>270)])
-
 
 
 # ***************************************************
